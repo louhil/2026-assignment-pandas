@@ -8,6 +8,7 @@ https://github.com/x-datascience-datacamp/datacamp-assignment-pandas/blob/main/e
 To do that, you will load the data as pandas.DataFrame, merge the info and
 aggregate them by regions and finally plot them on a map using `geopandas`.
 """
+
 import pandas as pd
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -48,11 +49,14 @@ def merge_regions_and_departments(regions, departments):
             "region_code": "code_reg",
             "name_reg": "name_reg",
             "code_dep": "code_dep",
+            "code_x": "code_dep",
             "name_dep": "name_dep",
+            "name_x": "name_dep",
         }
     )
 
-    return merged[["code_reg", "name_reg", "code_dep", "name_dep"]]
+    res = merged[["code_reg", "name_reg", "code_dep", "name_dep"]]
+    return res.loc[:, ~res.columns.duplicated(keep="first")]
 
 
 def merge_referendum_and_areas(referendum, regions_and_departments):
@@ -140,18 +144,14 @@ def plot_referendum_map(referendum_result_by_regions):
 
 
 if __name__ == "__main__":
-
     referendum, df_reg, df_dep = load_data()
-    regions_and_departments = merge_regions_and_departments(
-        df_reg, df_dep
-    )
+    regions_and_departments = merge_regions_and_departments(df_reg, df_dep)
     referendum_and_areas = merge_referendum_and_areas(
         referendum, regions_and_departments
     )
-    referendum_results = compute_referendum_result_by_regions(
-        referendum_and_areas
-    )
+    referendum_results = compute_referendum_result_by_regions(referendum_and_areas)
     print(referendum_results)
 
     plot_referendum_map(referendum_results)
+
     plt.show()
