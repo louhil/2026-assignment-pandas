@@ -46,7 +46,7 @@ def merge_regions_and_departments(regions, departments):
         }
     )
 
-    return merged[["code_reg", "name_reg", "code_dep", "name_dep"]]
+    return merged[["code_reg", "name_reg", "code_dep", "name_dep"]].drop_duplicates()
 
 
 def merge_referendum_and_areas(referendum, regions_and_departments):
