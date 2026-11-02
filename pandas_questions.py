@@ -29,9 +29,15 @@ def merge_regions_and_departments(regions, departments):
     ['code_reg', 'name_reg', 'code_dep', 'name_dep']
     """
 
+    deps = departments.copy()
+    deps["code"] = deps["code"].astype(str).str.zfill(2)
+
+    regs = regions.copy()
+    regs["code"] = regs["code"].astype(str)
+
     merged = pd.merge(
-        departments,
-        regions,
+        deps,
+        regs,
         left_on="region_code",
         right_on="code",
         suffixes=("_dep", "_reg"),
@@ -46,7 +52,7 @@ def merge_regions_and_departments(regions, departments):
         }
     )
 
-    return merged[["code_reg", "name_reg", "code_dep", "name_dep"]].drop_duplicates()
+    return merged[["code_reg", "name_reg", "code_dep", "name_dep"]]
 
 
 def merge_referendum_and_areas(referendum, regions_and_departments):
@@ -59,19 +65,23 @@ def merge_referendum_and_areas(referendum, regions_and_departments):
     France, like Guadaloupe, Reunion, or Tahiti.
     """
 
-    cleaned_ref = referendum[
-        ~referendum["Department code"].str.contains("Z", na=False)
-    ].copy()
+    ref = referendum.copy()
+    ref["Department code"] = ref["Department code"].astype(str).str.zfill(2)
+
+    cleaned_ref = ref[~ref["Department code"].str.contains("Z", na=False)]
+
+    areas = regions_and_departments.copy()
+    areas["code_dep"] = areas["code_dep"].astype(str).str.zfill(2)
 
     merged = pd.merge(
         cleaned_ref,
-        regions_and_departments,
+        areas,
         left_on="Department code",
         right_on="code_dep",
         how="inner",
     )
 
-    return merged
+    return merged.loc[:, ~merged.columns.duplicated(keep="first")]
 
 
 def compute_referendum_result_by_regions(referendum_and_areas):
@@ -105,7 +115,7 @@ def plot_referendum_map(referendum_result_by_regions):
     * Return a gpd.GeoDataFrame with a column 'ratio' containing the results.
     """
 
-    geo_df = gpd.read_file("regions.geojson")
+    geo_df = gpd.read_file("data/regions.geojson")
 
     merged_geo = geo_df.merge(
         referendum_result_by_regions, left_on="code", right_index=True
